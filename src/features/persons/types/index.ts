@@ -1,0 +1,1 @@
+export type { CreatePersonInput, Person, UpdatePersonInput } from './person'

@@ -8,12 +8,26 @@
 const BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/api\/?$/, '')
 export const AUTH_STORAGE_KEY = 'bakery-auth'
 
-function getAccessToken() {
+function getAuthHeaders(): Record<string, string> {
   try {
-    const session = localStorage.getItem(AUTH_STORAGE_KEY)
-    return session ? (JSON.parse(session) as { accessToken?: string }).accessToken : undefined
+    const sessionStr = localStorage.getItem(AUTH_STORAGE_KEY)
+    if (!sessionStr) return {}
+    const session = JSON.parse(sessionStr) as {
+      accessToken?: string
+      id?: number | string
+      userId?: number | string
+    }
+    const headers: Record<string, string> = {}
+    if (session.accessToken) {
+      headers['Authorization'] = `Bearer ${session.accessToken}`
+    }
+    const userId = session.id ?? session.userId ?? '1'
+    if (userId !== undefined && userId !== null && userId !== '') {
+      headers['X-User-Id'] = String(userId)
+    }
+    return headers
   } catch {
-    return undefined
+    return {}
   }
 }
 
@@ -35,14 +49,14 @@ interface RequestOptions extends Omit<RequestInit, 'body'> {
 
 async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { body, headers, ...rest } = options
-  const accessToken = getAccessToken()
+  const authHeaders = getAuthHeaders()
 
   const response = await fetch(`${BASE_URL}${path}`, {
     ...rest,
     headers: {
       'Content-Type': 'application/json',
       Accept: 'application/json',
-      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+      ...authHeaders,
       ...headers,
     },
     body: body !== undefined ? JSON.stringify(body) : undefined,

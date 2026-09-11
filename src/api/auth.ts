@@ -4,6 +4,8 @@ import { endpoints } from '@/api/endpoints'
 export interface AuthSession {
   accessToken: string
   expiresIn?: number
+  id?: number | string
+  userId?: number | string
   username: string
   firstName?: string
   role: string

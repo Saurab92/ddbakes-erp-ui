@@ -1,4 +1,4 @@
-import { ApiError, apiClient, AUTH_STORAGE_KEY } from '@/api/client'
+import { apiClient, AUTH_STORAGE_KEY } from '@/api/client'
 import { endpoints } from '@/api/endpoints'
 
 export interface AuthSession {
@@ -40,26 +40,7 @@ export function clearAuthSession() {
 }
 
 export function login(username: string, password: string) {
-  return fetch(endpoints.auth.login, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-    },
-    body: JSON.stringify({ username, password }),
-  }).then(async (response) => {
-    const payload = await response.json().catch(() => null)
-
-    if (!response.ok) {
-      const message =
-        payload && typeof payload === 'object' && 'message' in payload
-          ? String((payload as { message?: unknown }).message)
-          : response.statusText
-      throw new ApiError(message, response.status, payload)
-    }
-
-    return payload as AuthSession
-  })
+  return apiClient.post<AuthSession>(endpoints.auth.login, { username, password })
 }
 
 export function logout(accessToken: string) {

@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { Controller, useForm } from 'react-hook-form'
+import { Controller, useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import {
@@ -51,6 +51,9 @@ export function StockFormDialog({
       defaultValues: { productId: '', quantity: 0 },
     })
 
+  const selectedProductId = useWatch({ control, name: 'productId' })
+  const selectedProduct = products?.find((product) => product.id === selectedProductId)
+
   useEffect(() => {
     if (open) reset(stock ? { productId: stock.productId, quantity: stock.quantity } : { productId: '', quantity: 0 })
   }, [open, reset, stock])
@@ -71,6 +74,16 @@ export function StockFormDialog({
               <Combobox id="stock-product" options={productOptions} value={field.value} onChange={field.onChange} placeholder="Select a product" searchPlaceholder="Search products..." emptyText="No products found." disabled={isEditing} />
             )} />
             {errors.productId && <p className="text-sm text-destructive">{errors.productId.message}</p>}
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="stock-unit">Unit</Label>
+            <Input
+              id="stock-unit"
+              value={selectedProduct?.unitName ?? ''}
+              readOnly
+              placeholder="Select a product"
+              className="bg-muted/50"
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="stock-quantity">Quantity</Label>

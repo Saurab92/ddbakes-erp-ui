@@ -28,6 +28,7 @@ export function ProductTable({ products, onEdit, onToggleStatus, onDelete }: Pro
           <TableHead>Category</TableHead>
           <TableHead>Unit</TableHead>
           <TableHead>Minimum Stock</TableHead>
+          <TableHead>Suppliers</TableHead>
           <TableHead>Status</TableHead>
           <TableHead className="text-right">Actions</TableHead>
         </TableRow>
@@ -39,6 +40,19 @@ export function ProductTable({ products, onEdit, onToggleStatus, onDelete }: Pro
             <TableCell>{product.categoryName ?? '-'}</TableCell>
             <TableCell>{product.unitName}</TableCell>
             <TableCell>{product.minimumStock}</TableCell>
+            <TableCell>
+              {product.suppliers && product.suppliers.length > 0 ? (
+                <div className="flex flex-wrap gap-1 max-w-xs">
+                  {product.suppliers.map((supplier) => (
+                    <Badge key={supplier.id} variant="outline" className="text-xs">
+                      {supplier.name}
+                    </Badge>
+                  ))}
+                </div>
+              ) : (
+                <span className="text-muted-foreground">-</span>
+              )}
+            </TableCell>
             <TableCell>
               <Badge variant={product.active ? 'success' : 'secondary'}>
                 {product.active ? 'Active' : 'Inactive'}

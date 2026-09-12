@@ -26,7 +26,7 @@ export function SupplierTable({ suppliers, onEdit, onToggleStatus, onDelete }: S
           <TableHead>Name</TableHead>
           <TableHead>Contact person</TableHead>
           <TableHead>Phone</TableHead>
-          <TableHead>Email</TableHead>
+          <TableHead>Products</TableHead>
           <TableHead>Status</TableHead>
           <TableHead className="text-right">Actions</TableHead>
         </TableRow>
@@ -37,7 +37,19 @@ export function SupplierTable({ suppliers, onEdit, onToggleStatus, onDelete }: S
             <TableCell className="font-medium">{supplier.name}</TableCell>
             <TableCell>{supplier.contactPerson || '-'}</TableCell>
             <TableCell>{supplier.phone || '-'}</TableCell>
-            <TableCell>{supplier.email || '-'}</TableCell>
+            <TableCell>
+              {supplier.products && supplier.products.length > 0 ? (
+                <div className="flex flex-wrap gap-1 max-w-xs">
+                  {supplier.products.map((product) => (
+                    <Badge key={product.id} variant="outline" className="text-xs">
+                      {product.name}
+                    </Badge>
+                  ))}
+                </div>
+              ) : (
+                <span className="text-muted-foreground">-</span>
+              )}
+            </TableCell>
             <TableCell>
               <Badge variant={supplier.active ? 'success' : 'secondary'}>
                 {supplier.active ? 'Active' : 'Inactive'}

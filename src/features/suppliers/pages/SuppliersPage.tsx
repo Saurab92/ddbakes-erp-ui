@@ -23,9 +23,13 @@ import {
 import type { Supplier } from '@/features/suppliers/types'
 
 function toSupplierInput(values: SupplierFormValues) {
-  return Object.fromEntries(
-    Object.entries(values).filter(([key, value]) => key === 'active' || value !== ''),
-  ) as SupplierFormValues
+  return {
+    ...values,
+    contactPerson: values.contactPerson || undefined,
+    phone: values.phone || undefined,
+    email: values.email || undefined,
+    address: values.address || undefined,
+  }
 }
 
 export function SuppliersPage() {
@@ -44,9 +48,14 @@ export function SuppliersPage() {
     const term = search.trim().toLowerCase()
     return (suppliers ?? []).filter((supplier) => {
       if (!term) return true
-      return [supplier.name, supplier.contactPerson, supplier.phone, supplier.email]
-        .filter(Boolean)
-        .some((value) => value!.toLowerCase().includes(term))
+      const productNames =
+        supplier.products?.map((p) => p.name).join(' ').toLowerCase() ?? ''
+      return (
+        [supplier.name, supplier.contactPerson, supplier.phone, supplier.email]
+          .filter(Boolean)
+          .some((value) => value!.toLowerCase().includes(term)) ||
+        productNames.includes(term)
+      )
     })
   }, [suppliers, search])
 

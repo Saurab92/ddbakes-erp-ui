@@ -35,6 +35,7 @@ export const endpoints = {
   products: {
     root: `${API_PREFIX}/products`,
     byId: (id: string) => `${API_PREFIX}/products/${id}`,
+    suppliers: (id: string) => `${API_PREFIX}/products/${id}/suppliers`,
     deactivate: (id: string) => `${API_PREFIX}/products/${id}/deactivate`,
   },
   persons: {

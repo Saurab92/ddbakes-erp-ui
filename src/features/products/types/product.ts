@@ -1,3 +1,13 @@
+export interface ProductSupplierSummary {
+  id: string
+  name: string
+  contactPerson?: string
+  phone?: string
+  email?: string
+  address?: string
+  active?: boolean
+}
+
 export interface Product {
   id: string
   name: string
@@ -7,6 +17,8 @@ export interface Product {
   categoryName: string
   minimumStock: number
   active: boolean
+  suppliers?: ProductSupplierSummary[]
+  supplierIds?: string[]
 }
 
 export interface CreateProductInput {
@@ -15,6 +27,7 @@ export interface CreateProductInput {
   categoryId: string
   minimumStock: number
   active: boolean
+  supplierIds?: string[]
 }
 
-export type UpdateProductInput = CreateProductInput
+export type UpdateProductInput = Partial<CreateProductInput>

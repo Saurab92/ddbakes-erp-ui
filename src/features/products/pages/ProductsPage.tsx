@@ -52,7 +52,13 @@ export function ProductsPage() {
     if (!products) return []
     const term = search.trim().toLowerCase()
     return products.filter((product) => {
-      const matchesSearch = term ? product.name.toLowerCase().includes(term) : true
+      const supplierNames =
+        product.suppliers?.map((s) => s.name).join(' ').toLowerCase() ?? ''
+      const matchesSearch = term
+        ? product.name.toLowerCase().includes(term) ||
+          (product.categoryName && product.categoryName.toLowerCase().includes(term)) ||
+          supplierNames.includes(term)
+        : true
       const matchesCategory =
         categoryFilter === 'all' ? true : product.categoryId === categoryFilter
       const matchesStatus =

@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { productApi } from '@/features/products/api/productApi'
+import { supplierKeys } from '@/features/suppliers/hooks/useSuppliers'
 import type { CreateProductInput, UpdateProductInput } from '@/features/products/types'
 
 export const productKeys = {
@@ -20,6 +21,7 @@ export function useCreateProduct() {
     mutationFn: (input: CreateProductInput) => productApi.createProduct(input),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: productKeys.all })
+      queryClient.invalidateQueries({ queryKey: supplierKeys.all })
       toast.success('Product created successfully')
     },
     onError: (error: Error) => {
@@ -35,10 +37,27 @@ export function useUpdateProduct() {
       productApi.updateProduct(id, input),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: productKeys.all })
+      queryClient.invalidateQueries({ queryKey: supplierKeys.all })
       toast.success('Product updated successfully')
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to update product')
+    },
+  })
+}
+
+export function useUpdateProductSuppliers() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, supplierIds }: { id: string; supplierIds: string[] }) =>
+      productApi.updateProductSuppliers(id, supplierIds),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: productKeys.all })
+      queryClient.invalidateQueries({ queryKey: supplierKeys.all })
+      toast.success('Product suppliers updated successfully')
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to update product suppliers')
     },
   })
 }
@@ -49,6 +68,7 @@ export function useDeleteProduct() {
     mutationFn: (id: string) => productApi.deleteProduct(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: productKeys.all })
+      queryClient.invalidateQueries({ queryKey: supplierKeys.all })
       toast.success('Product deleted successfully')
     },
     onError: (error: Error) => {

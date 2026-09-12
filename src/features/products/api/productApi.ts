@@ -3,14 +3,21 @@ import { endpoints } from '@/api/endpoints'
 import type {
   CreateProductInput,
   Product,
+  ProductSupplierSummary,
   UpdateProductInput,
 } from '@/features/products/types'
 
+interface ProductSupplierResponse extends Omit<ProductSupplierSummary, 'id'> {
+  id: number
+}
+
 /** Shape returned by the Spring Boot API: ids are numeric on the wire. */
-interface ProductResponse extends Omit<Product, 'id' | 'unitId' | 'categoryId'> {
+interface ProductResponse extends Omit<Product, 'id' | 'unitId' | 'categoryId' | 'suppliers' | 'supplierIds'> {
   id: number
   unitId: number
   categoryId: number
+  suppliers?: ProductSupplierResponse[]
+  supplierIds?: number[]
 }
 
 /** The list endpoint may return a bare array or wrap it as `{ products, count }`. */
@@ -23,16 +30,29 @@ function toProduct(response: ProductResponse): Product {
     id: String(response.id),
     unitId: String(response.unitId),
     categoryId: String(response.categoryId),
+    suppliers: response.suppliers?.map((supplier) => ({
+      ...supplier,
+      id: String(supplier.id),
+    })),
+    supplierIds:
+      response.supplierIds?.map(String) ??
+      response.suppliers?.map((s) => String(s.id)),
   }
 }
 
-/** Convert the form model to the wire payload (`unitId`/`categoryId` as numbers). */
-function toPayload(input: CreateProductInput) {
-  return {
-    ...input,
-    unitId: Number(input.unitId),
-    categoryId: Number(input.categoryId),
+/** Convert the form model to the wire payload (`unitId`/`categoryId`/`supplierIds` as numbers). */
+function toPayload(input: CreateProductInput | UpdateProductInput) {
+  const payload: Record<string, unknown> = { ...input }
+  if (input.unitId !== undefined) {
+    payload.unitId = Number(input.unitId)
   }
+  if (input.categoryId !== undefined) {
+    payload.categoryId = Number(input.categoryId)
+  }
+  if (input.supplierIds !== undefined) {
+    payload.supplierIds = input.supplierIds.map(Number)
+  }
+  return payload
 }
 
 export const productApi = {
@@ -47,6 +67,12 @@ export const productApi = {
   updateProduct: (id: string, input: UpdateProductInput) =>
     apiClient
       .put<ProductResponse>(endpoints.products.byId(id), toPayload(input))
+      .then(toProduct),
+  updateProductSuppliers: (id: string, supplierIds: string[]) =>
+    apiClient
+      .put<ProductResponse>(endpoints.products.suppliers(id), {
+        supplierIds: supplierIds.map(Number),
+      })
       .then(toProduct),
   deleteProduct: (id: string) =>
     apiClient.delete<void>(endpoints.products.byId(id)),

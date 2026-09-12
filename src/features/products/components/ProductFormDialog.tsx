@@ -15,8 +15,10 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Combobox } from '@/components/common/Combobox'
+import { MultiSelectCombobox } from '@/components/common/MultiSelectCombobox'
 import { useUnitsQuery } from '@/features/units/hooks/useUnits'
 import { useCategoriesQuery } from '@/features/categories/hooks/useCategories'
+import { useSuppliersQuery } from '@/features/suppliers/hooks/useSuppliers'
 import type { Product } from '@/features/products/types'
 
 const productFormSchema = z.object({
@@ -31,6 +33,7 @@ const productFormSchema = z.object({
     .number({ message: 'Minimum stock must be a number' })
     .min(0, 'Minimum stock cannot be negative'),
   active: z.boolean(),
+  supplierIds: z.array(z.string()).default([]),
 })
 
 export type ProductFormValues = z.output<typeof productFormSchema>
@@ -54,12 +57,27 @@ export function ProductFormDialog({
   const isEditing = Boolean(product)
   const { data: units } = useUnitsQuery()
   const { data: categories } = useCategoriesQuery()
+  const { data: suppliers } = useSuppliersQuery()
+
+  const productSupplierIdSet = new Set(
+    product?.supplierIds ?? product?.suppliers?.map((s) => s.id) ?? [],
+  )
+
   const activeUnitOptions = (units ?? [])
     .filter((unit) => unit.active || unit.id === product?.unitId)
     .map((unit) => ({ value: unit.id, label: `${unit.name} (${unit.code})` }))
+
   const activeCategoryOptions = (categories ?? [])
     .filter((category) => category.active || category.id === product?.categoryId)
     .map((category) => ({ value: category.id, label: category.name }))
+
+  const activeSupplierOptions = (suppliers ?? [])
+    .filter((supplier) => supplier.active || productSupplierIdSet.has(supplier.id))
+    .map((supplier) => ({
+      value: supplier.id,
+      label: supplier.name,
+      subLabel: supplier.contactPerson ? `Contact: ${supplier.contactPerson}` : undefined,
+    }))
 
   const {
     register,
@@ -69,11 +87,20 @@ export function ProductFormDialog({
     formState: { errors },
   } = useForm<ProductFormInput, unknown, ProductFormValues>({
     resolver: zodResolver(productFormSchema),
-    defaultValues: { name: '', unitId: '', categoryId: '', minimumStock: 0, active: true },
+    defaultValues: {
+      name: '',
+      unitId: '',
+      categoryId: '',
+      minimumStock: 0,
+      active: true,
+      supplierIds: [],
+    },
   })
 
   useEffect(() => {
     if (open) {
+      const initialSupplierIds =
+        product?.supplierIds ?? product?.suppliers?.map((s) => s.id) ?? []
       reset(
         product
           ? {
@@ -82,8 +109,16 @@ export function ProductFormDialog({
               categoryId: product.categoryId,
               minimumStock: product.minimumStock,
               active: product.active,
+              supplierIds: initialSupplierIds,
             }
-          : { name: '', unitId: '', categoryId: '', minimumStock: 0, active: true },
+          : {
+              name: '',
+              unitId: '',
+              categoryId: '',
+              minimumStock: 0,
+              active: true,
+              supplierIds: [],
+            },
       )
     }
   }, [open, product, reset])
@@ -154,6 +189,28 @@ export function ProductFormDialog({
             />
             {errors.categoryId && (
               <p className="text-sm text-destructive">{errors.categoryId.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="product-suppliers">Suppliers</Label>
+            <Controller
+              control={control}
+              name="supplierIds"
+              render={({ field }) => (
+                <MultiSelectCombobox
+                  id="product-suppliers"
+                  options={activeSupplierOptions}
+                  value={field.value}
+                  onChange={field.onChange}
+                  placeholder="Select suppliers..."
+                  searchPlaceholder="Search suppliers..."
+                  emptyText="No suppliers found."
+                />
+              )}
+            />
+            {errors.supplierIds && (
+              <p className="text-sm text-destructive">{errors.supplierIds.message}</p>
             )}
           </div>
 

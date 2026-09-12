@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import {
@@ -14,6 +14,8 @@ import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { MultiSelectCombobox } from '@/components/common/MultiSelectCombobox'
+import { useProductsQuery } from '@/features/products/hooks/useProducts'
 import type { Supplier } from '@/features/suppliers/types'
 
 const optionalText = (label: string, max: number) =>
@@ -26,6 +28,7 @@ const supplierFormSchema = z.object({
   email: optionalText('Email', 150).email('Enter a valid email address').or(z.literal('')),
   address: optionalText('Address', 250),
   active: z.boolean(),
+  productIds: z.array(z.string()).default([]),
 })
 
 export type SupplierFormValues = z.infer<typeof supplierFormSchema>
@@ -46,12 +49,27 @@ export function SupplierFormDialog({
   isSubmitting,
 }: SupplierFormDialogProps) {
   const isEditing = Boolean(supplier)
+  const { data: products } = useProductsQuery()
+
+  const supplierProductIdSet = new Set(
+    supplier?.productIds ?? supplier?.products?.map((p) => p.id) ?? [],
+  )
+
+  const activeProductOptions = (products ?? [])
+    .filter((product) => product.active || supplierProductIdSet.has(product.id))
+    .map((product) => ({
+      value: product.id,
+      label: product.name,
+      subLabel: product.categoryName
+        ? `${product.categoryName} (${product.unitName})`
+        : product.unitName,
+    }))
+
   const {
     register,
     handleSubmit,
     reset,
-    watch,
-    setValue,
+    control,
     formState: { errors },
   } = useForm<SupplierFormValues>({
     resolver: zodResolver(supplierFormSchema),
@@ -62,11 +80,14 @@ export function SupplierFormDialog({
       email: '',
       address: '',
       active: true,
+      productIds: [],
     },
   })
 
   useEffect(() => {
     if (open) {
+      const initialProductIds =
+        supplier?.productIds ?? supplier?.products?.map((p) => p.id) ?? []
       reset(
         supplier
           ? {
@@ -76,6 +97,7 @@ export function SupplierFormDialog({
               email: supplier.email ?? '',
               address: supplier.address ?? '',
               active: supplier.active,
+              productIds: initialProductIds,
             }
           : {
               name: '',
@@ -84,6 +106,7 @@ export function SupplierFormDialog({
               email: '',
               address: '',
               active: true,
+              productIds: [],
             },
       )
     }
@@ -130,11 +153,38 @@ export function SupplierFormDialog({
             <Input id="supplier-address" placeholder="e.g. 123 Industrial Area, Pune" {...register('address')} />
             {errors.address && <p className="text-sm text-destructive">{errors.address.message}</p>}
           </div>
+          <div className="space-y-2">
+            <Label htmlFor="supplier-products">Products Supplied</Label>
+            <Controller
+              control={control}
+              name="productIds"
+              render={({ field }) => (
+                <MultiSelectCombobox
+                  id="supplier-products"
+                  options={activeProductOptions}
+                  value={field.value}
+                  onChange={field.onChange}
+                  placeholder="Select products..."
+                  searchPlaceholder="Search products..."
+                  emptyText="No products found."
+                />
+              )}
+            />
+            {errors.productIds && (
+              <p className="text-sm text-destructive">{errors.productIds.message}</p>
+            )}
+          </div>
           <div className="flex items-center gap-2">
-            <Checkbox
-              id="supplier-active"
-              checked={watch('active')}
-              onCheckedChange={(checked) => setValue('active', checked === true)}
+            <Controller
+              control={control}
+              name="active"
+              render={({ field }) => (
+                <Checkbox
+                  id="supplier-active"
+                  checked={field.value}
+                  onCheckedChange={(checked) => field.onChange(checked === true)}
+                />
+              )}
             />
             <Label htmlFor="supplier-active" className="font-normal">Active</Label>
           </div>

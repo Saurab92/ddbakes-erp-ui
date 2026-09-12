@@ -20,8 +20,9 @@ interface ProductTableProps {
 
 export function ProductTable({ products, onEdit, onToggleStatus, onDelete }: ProductTableProps) {
   return (
-    <Table>
-      <TableHeader>
+    <div className="max-h-[70vh] overflow-auto rounded-md border">
+      <Table>
+      <TableHeader className="sticky top-0 z-10 bg-background">
         <TableRow>
           <TableHead>Product</TableHead>
           <TableHead>Category</TableHead>
@@ -80,6 +81,7 @@ export function ProductTable({ products, onEdit, onToggleStatus, onDelete }: Pro
           </TableRow>
         ))}
       </TableBody>
-    </Table>
+      </Table>
+    </div>
   )
 }

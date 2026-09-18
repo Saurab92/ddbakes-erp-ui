@@ -4,6 +4,7 @@ import { LogOut, Menu, X } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { clearAuthSession, getAuthSession, logout } from '@/api/auth'
 import { Sidebar } from '@/layouts/Sidebar'
+import { ModuleSwitcher } from '@/components/common/ModuleSwitcher'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/utils/cn'
 
@@ -38,9 +39,7 @@ export function AppLayout() {
         >
           {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </Button>
-        <h1 className="text-base font-semibold tracking-tight">
-          DD BAKES MANAGEMENT SYSTEM
-        </h1>
+        <ModuleSwitcher />
         <div className="ml-auto flex items-center gap-3">
           {session && (
             <span className="hidden text-sm text-muted-foreground sm:inline">

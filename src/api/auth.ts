@@ -11,13 +11,24 @@ export interface AuthSession {
   role: string
 }
 
-const OP_MANAGER_ALLOWED_PATHS = ['/', '/purchases', '/issues', '/stocks']
+const OP_MANAGER_ALLOWED_PATHS = [
+  '/',
+  '/inventory/dashboard',
+  '/purchases',
+  '/issues',
+  '/stocks',
+  '/inventory/purchases',
+  '/inventory/issues',
+  '/inventory/stocks',
+]
 
 export function canAccessPath(pathname: string, session: AuthSession | null) {
   if (!session) return false
-  if (session.role.toUpperCase() !== 'OP_MANAGER') return true
+  if (session.role.toUpperCase() === 'OP_MANAGER') {
+    return OP_MANAGER_ALLOWED_PATHS.includes(pathname)
+  }
 
-  return OP_MANAGER_ALLOWED_PATHS.includes(pathname)
+  return true
 }
 
 export function getAuthSession(): AuthSession | null {

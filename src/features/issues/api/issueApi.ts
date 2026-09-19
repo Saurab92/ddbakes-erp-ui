@@ -13,6 +13,13 @@ interface IssueResponse extends Omit<Issue, 'id' | 'departmentId' | 'personId' |
   issueItems: IssueItemResponse[]
 }
 
+interface IssuePageResponse {
+  content: IssueResponse[]
+  totalPages: number
+  totalElements: number
+  number: number
+}
+
 function toIssue(response: IssueResponse): Issue {
   return {
     ...response,
@@ -39,10 +46,28 @@ function toPayload(input: CreateIssueInput) {
 }
 
 export const issueApi = {
-  getIssues: () =>
+  getIssues: (page = 0, size = 10) =>
     apiClient
-      .get<IssueResponse[]>(endpoints.issues.root)
-      .then((issues) => issues.map(toIssue)),
+      .get<IssuePageResponse | IssueResponse[]>(
+        `${endpoints.issues.root}?page=${page}&size=${size}`,
+      )
+      .then((response) => {
+        if (Array.isArray(response)) {
+          return {
+            issues: response.map(toIssue),
+            page,
+            totalPages: response.length < size ? page + 1 : page + 2,
+            totalElements: response.length,
+          }
+        }
+
+        return {
+          issues: response.content.map(toIssue),
+          page: response.number,
+          totalPages: response.totalPages,
+          totalElements: response.totalElements,
+        }
+      }),
   getIssue: (id: string) =>
     apiClient.get<IssueResponse>(endpoints.issues.byId(id)).then(toIssue),
   createIssue: (input: CreateIssueInput) =>

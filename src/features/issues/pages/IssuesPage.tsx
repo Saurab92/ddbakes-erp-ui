@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Plus } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { EmptyState } from '@/components/common/EmptyState'
@@ -14,7 +14,9 @@ import { useCreateIssue, useIssuesQuery, useUpdateIssue } from '@/features/issue
 import type { Issue } from '@/features/issues/types'
 
 export function IssuesPage() {
-  const { data: issues, isLoading, isError, refetch } = useIssuesQuery()
+  const pageSize = 10
+  const [page, setPage] = useState(0)
+  const { data, isLoading, isError, refetch } = useIssuesQuery(page, pageSize)
   const createIssue = useCreateIssue()
   const updateIssue = useUpdateIssue()
 
@@ -22,6 +24,8 @@ export function IssuesPage() {
   const [formOpen, setFormOpen] = useState(false)
   const [editingIssue, setEditingIssue] = useState<Issue | null>(null)
   const [viewingIssue, setViewingIssue] = useState<Issue | null>(null)
+
+  const issues = data?.issues
 
   const filteredIssues = useMemo(() => {
     if (!issues) return []
@@ -78,7 +82,10 @@ export function IssuesPage() {
         <CardContent className="space-y-4 p-4">
           <SearchInput
             value={search}
-            onChange={setSearch}
+            onChange={(value) => {
+              setSearch(value)
+              setPage(0)
+            }}
             placeholder="Search by department, person, or reason..."
             className="max-w-sm"
           />
@@ -92,9 +99,9 @@ export function IssuesPage() {
             />
           ) : filteredIssues.length === 0 ? (
             <EmptyState
-              title={issues && issues.length > 0 ? 'No issues match your search' : 'No issues yet'}
+              title={data && data.totalElements > 0 ? 'No issues match your search' : 'No issues yet'}
               description={
-                issues && issues.length > 0
+                data && data.totalElements > 0
                   ? 'Try adjusting your search.'
                   : 'Add your first issue to get started.'
               }
@@ -105,6 +112,34 @@ export function IssuesPage() {
               onEdit={handleEdit}
               onView={handleView}
             />
+          )}
+
+          {data && data.totalPages > 1 && (
+            <div className="flex items-center justify-between gap-4 border-t pt-4">
+              <p className="text-sm text-muted-foreground">
+                Page {page + 1} of {data.totalPages}
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage((currentPage) => currentPage - 1)}
+                  disabled={page === 0 || isLoading}
+                >
+                  <ChevronLeft />
+                  Previous
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage((currentPage) => currentPage + 1)}
+                  disabled={page + 1 >= data.totalPages || isLoading}
+                >
+                  Next
+                  <ChevronRight />
+                </Button>
+              </div>
+            </div>
           )}
         </CardContent>
       </Card>

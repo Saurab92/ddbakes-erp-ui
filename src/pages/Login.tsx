@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useState } from 'react'
-import { ArrowRight, LockKeyhole, Mail, Wheat } from 'lucide-react'
+import { ArrowRight, Eye, EyeOff, LockKeyhole, Mail, Wheat } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { ApiError } from '@/api/client'
 import { getAuthSession, login, saveAuthSession } from '@/api/auth'
@@ -11,6 +11,7 @@ export function Login() {
   const navigate = useNavigate()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -128,13 +129,22 @@ export function Login() {
                 <LockKeyhole className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8a9086]" />
                 <Input
                   id="password"
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   autoComplete="current-password"
                   placeholder="Enter your password"
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
-                  className="h-12 border-[#d6d2c8] bg-[#fffdf8] pl-10 shadow-none focus-visible:ring-[#718b75]"
+                  className="h-12 border-[#d6d2c8] bg-[#fffdf8] pl-10 pr-10 shadow-none focus-visible:ring-[#718b75]"
                 />
+                <button
+                  type="button"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  aria-pressed={showPassword}
+                  onClick={() => setShowPassword((isVisible) => !isVisible)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8a9086] transition-colors hover:text-[#263c35] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#718b75] focus-visible:ring-offset-2"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
               </div>
             </div>
 
